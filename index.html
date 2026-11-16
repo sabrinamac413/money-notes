@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>金錢狀態筆記</title>
+<style>
+  :root{
+    --bg:#faf6f1;
+    --paper:#fffdf9;
+    --card:#fffaf5;         /* 圓角小卡底色 */
+    --ink:#4a3f38;
+    --soft:#7b6b60;
+    --muted:#a99689;
+    --line:#eee0d4;
+    --line-warm:#f0d9c8;
+    --accent:#d09474;
+    --accent-deep:#a8694c;
+    --accent-soft:#fbeee5;
+    --glow:#fff6ef;
+    --serif:"Noto Serif TC","Source Han Serif TC","Songti TC","PMingLiU",serif;
+    --sans:"Noto Sans TC","PingFang TC","Heiti TC","Microsoft JhengHei",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;color:var(--ink);
+    background:var(--bg) radial-gradient(ellipse 90% 50% at 50% 0%, #fdf1e8 0%, rgba(253,241,232,0) 70%) no-repeat;
+    font-family:var(--sans);font-size:17px;line-height:1.9;letter-spacing:.02em;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* 紙張 */
+  .paper{
+    max-width:680px;margin:56px auto 72px;padding:72px 56px 48px;
+    background:var(--paper);border-radius:28px;
+    box-shadow:0 1px 3px rgba(160,110,80,.06),0 18px 50px -24px rgba(170,110,75,.22);
+    counter-reset:q;
+  }
+
+  /* 開頭 */
+  .head{text-align:center;margin-bottom:48px}
+  h1{font-family:var(--serif);font-weight:500;font-size:1.75rem;letter-spacing:.12em;line-height:1.5;margin:0 0 .5em;color:#463a33}
+  .sub{margin:0;color:var(--soft);font-size:.95rem}
+  .intro{
+    margin:40px auto 0;max-width:30em;color:var(--soft);font-size:.98rem;line-height:2.1;
+    background:var(--accent-soft);border-radius:22px;padding:22px 24px;
+  }
+  .intro::before{
+    content:"";display:block;width:6px;height:6px;border-radius:50%;
+    background:var(--accent);opacity:.75;margin:0 auto 14px;
+  }
+
+  /* 日期：長圓形 */
+  .field-date{
+    display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:4px 16px;
+    background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:10px 24px;margin:0 0 32px;
+  }
+  .field-date label{display:inline;font-family:var(--serif);font-weight:500;letter-spacing:.06em}
+  input[type=date]{
+    font:inherit;font-size:.95rem;color:var(--ink);background:transparent;
+    border:0;border-bottom:1px solid transparent;padding:2px 0;
+  }
+  input[type=date]:focus{outline:none;border-bottom-color:var(--accent)}
+  .date-text{font-size:.88rem;color:var(--accent-deep)}
+
+  /* 每條題目：圓角小卡 */
+  .field[data-key]{
+    counter-increment:q;
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:22px 22px 18px;margin:0 0 22px;
+    transition:border-color .3s, box-shadow .3s;
+  }
+  .field[data-key]:focus-within{
+    border-color:var(--line-warm);
+    box-shadow:0 10px 28px -18px rgba(170,110,75,.4);
+  }
+  .field[data-key] label{
+    display:block;position:relative;padding-left:42px;line-height:1.7;
+    font-family:var(--serif);font-weight:500;font-size:1.05rem;letter-spacing:.06em;color:#4a3d35;
+  }
+  /* 題目前面嘅圓形數字 */
+  .field[data-key] label::before{
+    content:counter(q);
+    position:absolute;left:0;top:-.05em;
+    width:30px;height:30px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--accent-soft);border:1px solid var(--line-warm);
+    color:var(--accent-deep);
+    font-family:var(--sans);font-size:.85rem;font-weight:500;letter-spacing:0;
+  }
+  .opt{font-family:var(--sans);font-weight:400;font-size:.85rem;color:var(--muted);margin-left:.3em}
+  .hint{margin:.15em 0 0;padding-left:42px;font-size:.88rem;color:var(--muted);line-height:1.7}
+
+  /* 寫字格：圓角框 */
+  textarea{
+    display:block;width:100%;margin-top:14px;padding:12px 16px;
+    border:1px solid var(--line);border-radius:16px;background:var(--paper);
+    color:var(--ink);font:inherit;line-height:1.9;resize:none;overflow:hidden;min-height:3.8em;
+    transition:border-color .3s,background-color .4s;
+  }
+  textarea:focus{outline:none;border-color:var(--accent);background:var(--glow)}
+
+  /* 結尾：圓角淺色框 */
+  .closing{
+    text-align:center;color:var(--soft);font-family:var(--serif);font-size:1rem;line-height:2.1;letter-spacing:.06em;
+    background:var(--accent-soft);border-radius:20px;padding:26px 24px;margin:48px 0 40px;
+  }
+
+  /* 按鈕 */
+  .actions{display:flex;justify-content:center;flex-wrap:wrap;gap:12px}
+  button{
+    font:inherit;font-size:.92rem;color:var(--ink);background:transparent;
+    border:1px solid var(--line);border-radius:999px;padding:.5em 1.4em;
+    cursor:pointer;letter-spacing:.06em;transition:background .25s,border-color .25s,color .25s;
+  }
+  button:hover{background:var(--accent-soft);border-color:var(--line-warm)}
+  #btn-new{background:var(--accent-soft);border-color:var(--line-warm);color:var(--accent-deep)}
+  #btn-new:hover{background:#f8e3d5}
+  button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+  .status{text-align:center;min-height:1.7em;margin:14px 0 0;font-size:.85rem;color:var(--accent-deep);opacity:0;transition:opacity .6s}
+  .status.show{opacity:.85}
+
+  /* 以前的筆記 */
+  .archive{margin-top:64px;border-top:1px solid var(--line);padding-top:28px}
+  summary{
+    cursor:pointer;list-style:none;text-align:center;
+    font-family:var(--serif);font-weight:500;letter-spacing:.08em;color:var(--soft);
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"　＋";color:var(--accent);font-size:.85em}
+  details[open] summary::after{content:"　－"}
+  .archive-body{margin-top:24px}
+  .note{margin:0 0 16px;font-size:.86rem;color:var(--muted);line-height:1.85;text-align:center}
+  #list{list-style:none;margin:0;padding:0}
+  #list li{
+    display:flex;align-items:center;gap:10px;
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:8px 12px;margin-bottom:10px;
+  }
+  .pick{display:flex;align-items:center;padding:4px}
+  .pick input{width:16px;height:16px;margin:0;accent-color:var(--accent)}
+  .open{
+    flex:1;min-width:0;border:0;border-radius:12px;padding:6px 10px;
+    display:flex;flex-direction:column;text-align:left;line-height:1.6;
+  }
+  .open:hover{background:var(--accent-soft)}
+  .open .d{font-size:.92rem}
+  .open .p{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tag{font-size:.75rem;color:var(--accent-deep);background:var(--accent-soft);border-radius:999px;padding:1px 10px;white-space:nowrap}
+  .del{border:0;border-radius:999px;color:var(--muted);font-size:.82rem;padding:.3em .9em}
+  .del:hover{background:var(--accent-soft);color:var(--accent-deep)}
+  .empty{font-size:.88rem;color:var(--muted);text-align:center;margin:8px 0 0}
+  .archive-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:20px}
+  .spacer{flex:1}
+  .link{border:0;border-radius:0;padding:0;font-size:.82rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+  .link:hover{background:transparent;color:var(--ink)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  /* 頁尾 */
+  .page-foot{margin-top:72px;text-align:center;font-size:.78rem;color:var(--muted);line-height:1.8}
+  .page-foot p{margin:0}
+  .page-foot .sign{margin-top:6px;font-family:var(--serif);letter-spacing:.12em;color:var(--accent-deep)}
+
+  /* 確認視窗 */
+  dialog{
+    border:0;border-radius:22px;background:var(--paper);color:var(--ink);
+    padding:28px 28px 20px;width:calc(100% - 40px);max-width:340px;
+    box-shadow:0 20px 60px -20px rgba(150,95,65,.35);
+  }
+  dialog::backdrop{background:rgba(120,85,60,.22)}
+  #dlg-msg{margin:0 0 24px;white-space:pre-line;line-height:1.9}
+  .dlg-actions{display:flex;justify-content:flex-end;gap:10px}
+
+  #print-area{display:none}
+
+  @media (max-width:640px){
+    body{font-size:16px}
+    .paper{margin:0;padding:44px 16px 36px;border-radius:0;box-shadow:none;min-height:100vh}
+    .head{margin-bottom:40px}
+    h1{font-size:1.45rem}
+    .intro{padding:18px 18px;border-radius:20px}
+    .field-date{border-radius:18px;padding:12px 18px}
+    .field[data-key]{padding:18px 16px 14px;border-radius:18px}
+    .field[data-key] label,.hint{padding-left:38px}
+    .field[data-key] label::before{width:28px;height:28px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  /* ===== 列印：去裝飾、A4 一頁 ===== */
+  @page{size:A4;margin:16mm 18mm}
+  @media print{
+    body{background:#fff;color:#222;font-size:10.5pt;line-height:1.65}
+    body > *:not(#print-area){display:none!important}
+    #print-area{display:block}
+    .p-page{break-after:page;page-break-after:always}
+    .p-page:last-child{break-after:auto;page-break-after:auto}
+    .p-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:.5pt solid #999;padding-bottom:6pt;margin-bottom:14pt}
+    .p-title{margin:0;font-family:var(--serif);font-size:14pt;letter-spacing:.1em}
+    .p-date{margin:0;font-size:10pt;color:#444}
+    .p-field{margin:0 0 12pt;break-inside:avoid}
+    .p-field h3{margin:0 0 3pt;font-family:var(--serif);font-weight:500;font-size:10.5pt}
+    .p-field h3 span{font-weight:400;font-size:9pt;color:#666}
+    .p-answer{white-space:pre-wrap;word-break:break-word;min-height:3.3em;border-bottom:.5pt solid #bbb;padding-bottom:4pt}
+    .p-closing{margin:18pt 0 0;text-align:center;font-family:var(--serif);font-size:9.5pt;color:#444}
+    .p-foot{margin-top:16pt;padding-top:5pt;border-top:.5pt solid #ccc;display:flex;justify-content:space-between;gap:12pt;font-size:8pt;color:#666}
+  }
+</style>
+</head>
+<body>
+
+<main class="paper">
+
+  <header class="head">
+    <h1>金錢狀態筆記</h1>
+    <p class="sub">一頁紙，寫給今天的自己</p>
+    <p class="intro">
+      這不是記帳，也不是檢討。<br>
+      只是停一停，看看今天的自己和金錢相處得怎樣。<br>
+      寫多寫少都可以，沒有對錯。
+    </p>
+  </header>
+
+  <div class="field-date">
+    <label for="f-date">日期</label>
+    <input type="date" id="f-date">
+    <span class="date-text" id="date-text"></span>
+  </div>
+
+  <div class="field" data-key="feel">
+    <label for="f-feel">今天，我對金錢的感覺是……</label>
+    <p class="hint">一兩個詞也可以：安心、緊張、麻木、期待、內疚……</p>
+    <textarea id="f-feel" rows="2"></textarea>
+  </div>
+
+  <div class="field" data-key="moments">
+    <label for="f-moments">今天和錢有關的時刻<span class="opt">（選填）</span></label>
+    <p class="hint">不用寫數字，記下印象最深的一兩件事就好。</p>
+    <textarea id="f-moments" rows="2"></textarea>
+  </div>
+
+  <div class="field" data-key="body">
+    <label for="f-body">身體有甚麼反應？</label>
+    <p class="hint">想到錢的時候，胸口、肩膀、胃……有沒有甚麼感覺？</p>
+    <textarea id="f-body" rows="2"></textarea>
+  </div>
+
+  <div class="field" data-key="voice">
+    <label for="f-voice">腦海中出現的聲音</label>
+    <p class="hint">例如「不夠」「要小心」「我不配」……這把聲音像誰？</p>
+    <textarea id="f-voice" rows="2"></textarea>
+  </div>
+
+  <div class="field" data-key="need">
+    <label for="f-need">在金錢背後，我其實需要的是……</label>
+    <p class="hint">安全感、自由、被照顧、被肯定，還是別的？</p>
+    <textarea id="f-need" rows="2"></textarea>
+  </div>
+
+  <div class="field" data-key="kind">
+    <label for="f-kind">給自己一句溫柔的話</label>
+    <p class="hint">像對一位好朋友說話那樣。</p>
+    <textarea id="f-kind" rows="2"></textarea>
+  </div>
+
+  <div class="field" data-key="step">
+    <label for="f-step">明天想做的一個小行動<span class="opt">（選填）</span></label>
+    <p class="hint">小到不會有壓力的就好。</p>
+    <textarea id="f-step" rows="2"></textarea>
+  </div>
+
+  <p class="closing">
+    寫完了。<br>
+    無論今天怎樣，你都已經好好看過自己一次。
+  </p>
+
+  <div class="actions">
+    <button type="button" id="btn-save">儲存</button>
+    <button type="button" id="btn-new">新增今日一頁</button>
+    <button type="button" id="btn-print">列印這一頁</button>
+  </div>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+
+  <details class="archive">
+    <summary>以前的筆記<span id="count"></span></summary>
+    <div class="archive-body">
+      <p class="note">
+        筆記只會儲存在這部裝置的瀏覽器裡，不會上傳到任何地方。<br>
+        清除瀏覽器資料時會一併刪除，記得間中匯出備份。
+      </p>
+      <ul id="list"></ul>
+      <p class="empty" id="empty">還未有筆記。寫下第一頁吧。</p>
+      <div class="archive-actions" id="archive-actions">
+        <button type="button" id="btn-print-sel">列印已選</button>
+        <button type="button" class="link" id="btn-all">全選</button>
+        <span class="spacer"></span>
+        <button type="button" class="link" id="btn-export">匯出備份</button>
+        <button type="button" class="link" id="btn-import">匯入備份</button>
+        <input type="file" id="file-import" accept="application/json,.json" class="sr" tabindex="-1" aria-hidden="true">
+      </div>
+    </div>
+  </details>
+
+  <footer class="page-foot">
+    <p>寫下的內容會自動儲存，只屬於你自己。</p>
+    <p class="sign">慢慢來，也是一種前進</p>
+  </footer>
+
+</main>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <p id="dlg-msg"></p>
+    <div class="dlg-actions">
+      <button value="cancel">取消</button>
+      <button value="ok" id="dlg-ok">確定</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="print-area"></div>
+
+<script>
+(() => {
+  const KEY = 'money-state-notes-v1';
+  const $ = s => document.querySelector(s);
+  const fields = [...document.querySelectorAll('.field[data-key]')];
+  const dateInput = $('#f-date');
+  const dateText = $('#date-text');
+  const WD = '日一二三四五六';
+
+  let notes = load();
+  let currentId = null;
+  let timer = null;
+
+  /* ---------- 工具 ---------- */
+  function load(){
+    try{
+      const d = JSON.parse(localStorage.getItem(KEY) || '[]');
+      return Array.isArray(d) ? d : [];
+    }catch(e){ return []; }
+  }
+  function persist(){
+    try{ localStorage.setItem(KEY, JSON.stringify(notes)); return true; }
+    catch(e){ return false; }
+  }
+  function today(){
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  }
+  function fmt(iso){
+    if(!iso) return '';
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return `${y} 年 ${m} 月 ${d} 日・星期${WD[dt.getDay()]}`;
+  }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function collect(){
+    const o = {};
+    fields.forEach(f => { o[f.dataset.key] = f.querySelector('textarea').value; });
+    return o;
+  }
+  function hasText(o){ return Object.values(o).some(v => (v || '').trim()); }
+  function autosize(t){
+    t.style.height = 'auto';
+    t.style.height = (t.scrollHeight + t.offsetHeight - t.clientHeight) + 'px';
+  }
+  function preview(n){
+    const v = Object.values(n.fields || {}).find(x => (x || '').trim()) || '';
+    return v.replace(/\s+/g, ' ').trim().slice(0, 60);
+  }
+  function showStatus(msg){
+    const s = $('#status');
+    s.textContent = msg;
+    s.classList.add('show');
+    clearTimeout(showStatus.t);
+    showStatus.t = setTimeout(() => s.classList.remove('show'), 2400);
+  }
+  function ask(msg, okText = '確定'){
+    const dlg = $('#dlg');
+    if(typeof dlg.showModal !== 'function') return Promise.resolve(window.confirm(msg));
+    $('#dlg-msg').textContent = msg;
+    $('#dlg-ok').textContent = okText;
+    dlg.returnValue = '';
+    dlg.showModal();
+    return new Promise(r => dlg.addEventListener('close', () => r(dlg.returnValue === 'ok'), { once:true }));
+  }
+
+  /* ---------- 儲存 ---------- */
+  function save(manual){
+    const data = collect();
+    if(!hasText(data)){
+      if(manual) showStatus('還未寫下任何內容');
+      return;
+    }
+    const now = Date.now();
+    let n = notes.find(x => x.id === currentId);
+    if(!n){
+      n = { id: currentId || uid(), created: now };
+      currentId = n.id;
+      notes.push(n);
+    }
+    n.date = dateInput.value || today();
+    n.fields = data;
+    n.updated = now;
+    const ok = persist();
+    render();
+    showStatus(ok ? (manual ? '已儲存' : '已自動儲存') : '儲存失敗：這個瀏覽器可能不允許本機儲存');
+  }
+  function schedule(){
+    clearTimeout(timer);
+    timer = setTimeout(() => { timer = null; save(false); }, 800);
+  }
+  function flush(){
+    if(timer){ clearTimeout(timer); timer = null; save(false); }
+  }
+
+  /* ---------- 填入 / 顯示 ---------- */
+  function updateDate(){ dateText.textContent = fmt(dateInput.value); }
+  function fill(n){
+    currentId = n ? n.id : null;
+    dateInput.value = n ? n.date : today();
+    fields.forEach(f => {
+      const t = f.querySelector('textarea');
+      t.value = n && n.fields ? (n.fields[f.dataset.key] || '') : '';
+      autosize(t);
+    });
+    updateDate();
+    render();
+  }
+
+  function render(){
+    const list = $('#list');
+    list.innerHTML = '';
+    const sorted = [...notes].sort((a, b) =>
+      (b.date || '').localeCompare(a.date || '') || (b.updated || 0) - (a.updated || 0));
+    $('#empty').hidden = sorted.length > 0;
+    $('#archive-actions').hidden = sorted.length === 0;
+    $('#count').textContent = sorted.length ? `（${sorted.length}）` : '';
+
+    sorted.forEach(n => {
+      const li = document.createElement('li');
+
+      const pick = document.createElement('label');
+      pick.className = 'pick';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = n.id;
+      const sr = document.createElement('span');
+      sr.className = 'sr';
+      sr.textContent = '選取 ' + fmt(n.date);
+      pick.append(cb, sr);
+
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.className = 'open';
+      const d = document.createElement('span');
+      d.className = 'd';
+      d.textContent = fmt(n.date);
+      const p = document.createElement('span');
+      p.className = 'p';
+      p.textContent = preview(n) || '（空白）';
+      open.append(d, p);
+      open.addEventListener('click', () => {
+        flush();
+        fill(n);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showStatus('已打開 ' + fmt(n.date));
+      });
+
+      li.append(pick, open);
+
+      if(n.id === currentId){
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = '正在看';
+        li.append(tag);
+      }
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'del';
+      del.textContent = '刪除';
+      del.setAttribute('aria-label', '刪除 ' + fmt(n.date) + ' 的筆記');
+      del.addEventListener('click', async () => {
+        const ok = await ask(`要刪除 ${fmt(n.date)} 這一頁嗎？\n刪除後不能復原。`, '刪除');
+        if(!ok) return;
+        notes = notes.filter(x => x.id !== n.id);
+        persist();
+        if(n.id === currentId) fill(null); else render();
+        showStatus('已刪除');
+      });
+      li.append(del);
+
+      list.append(li);
+    });
+  }
+
+  /* ---------- 列印 ---------- */
+  function buildPrint(entries){
+    const area = $('#print-area');
+    area.innerHTML = '';
+    const printed = fmt(today());
+    entries.forEach(n => {
+      const page = document.createElement('section');
+      page.className = 'p-page';
+
+      const head = document.createElement('div');
+      head.className = 'p-head';
+      const t = document.createElement('h2');
+      t.className = 'p-title';
+      t.textContent = '金錢狀態筆記';
+      const d = document.createElement('p');
+      d.className = 'p-date';
+      d.textContent = fmt(n.date) || '　';
+      head.append(t, d);
+      page.append(head);
+
+      fields.forEach(f => {
+        const wrap = document.createElement('div');
+        wrap.className = 'p-field';
+        const h = document.createElement('h3');
+        const label = f.querySelector('label');
+        const opt = label.querySelector('.opt');
+        h.textContent = [...label.childNodes].filter(x => x !== opt).map(x => x.textContent).join('');
+        if(opt){
+          const s = document.createElement('span');
+          s.textContent = opt.textContent;
+          h.append(s);
+        }
+        const a = document.createElement('div');
+        a.className = 'p-answer';
+        a.textContent = (n.fields && n.fields[f.dataset.key]) || '';
+        wrap.append(h, a);
+        page.append(wrap);
+      });
+
+      const c = document.createElement('p');
+      c.className = 'p-closing';
+      c.textContent = '無論今天怎樣，你都已經好好看過自己一次。';
+      page.append(c);
+
+      const foot = document.createElement('div');
+      foot.className = 'p-foot';
+      const l = document.createElement('span');
+      l.textContent = '金錢狀態筆記';
+      const r = document.createElement('span');
+      r.textContent = '列印於 ' + printed;
+      foot.append(l, r);
+      page.append(foot);
+
+      area.append(page);
+    });
+    window.print();
+  }
+
+  /* ---------- 事件 ---------- */
+  fields.forEach(f => {
+    const t = f.querySelector('textarea');
+    t.addEventListener('input', () => { autosize(t); schedule(); });
+  });
+  dateInput.addEventListener('change', () => { updateDate(); schedule(); });
+  window.addEventListener('resize', () => fields.forEach(f => autosize(f.querySelector('textarea'))));
+
+  $('#btn-save').addEventListener('click', () => { clearTimeout(timer); timer = null; save(true); });
+
+  $('#btn-new').addEventListener('click', () => {
+    flush();
+    fill(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    fields[0].querySelector('textarea').focus({ preventScroll: true });
+    showStatus('已開新的一頁');
+  });
+
+  $('#btn-print').addEventListener('click', () => {
+    flush();
+    buildPrint([{ date: dateInput.value, fields: collect() }]);
+  });
+
+  $('#btn-print-sel').addEventListener('click', () => {
+    const ids = [...document.querySelectorAll('#list input[type=checkbox]:checked')].map(x => x.value);
+    if(!ids.length){ showStatus('請先勾選要列印的筆記'); return; }
+    flush();
+    const chosen = notes.filter(n => ids.includes(n.id))
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    buildPrint(chosen);
+  });
+
+  $('#btn-all').addEventListener('click', () => {
+    const boxes = [...document.querySelectorAll('#list input[type=checkbox]')];
+    const allOn = boxes.length && boxes.every(b => b.checked);
+    boxes.forEach(b => { b.checked = !allOn; });
+    $('#btn-all').textContent = allOn ? '全選' : '取消全選';
+  });
+
+  $('#btn-export').addEventListener('click', () => {
+    flush();
+    const blob = new Blob([JSON.stringify({ app:'money-state-notes', version:1, notes }, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `金錢狀態筆記-備份-${today()}.json`;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    showStatus('已匯出備份');
+  });
+
+  $('#btn-import').addEventListener('click', () => $('#file-import').click());
+  $('#file-import').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const data = JSON.parse(reader.result);
+        const incoming = Array.isArray(data) ? data : (data.notes || []);
+        let added = 0;
+        incoming.forEach(n => {
+          if(!n || !n.id || !n.fields) return;
+          const old = notes.find(x => x.id === n.id);
+          if(!old){ notes.push(n); added++; }
+          else if((n.updated || 0) > (old.updated || 0)){ Object.assign(old, n); added++; }
+        });
+        persist();
+        render();
+        showStatus(added ? `已匯入 ${added} 頁` : '沒有新的筆記需要匯入');
+      }catch(err){
+        showStatus('匯入失敗：檔案格式不正確');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  window.addEventListener('beforeunload', flush);
+  document.addEventListener('visibilitychange', () => { if(document.hidden) flush(); });
+
+  /* ---------- 開始 ---------- */
+  const todays = notes.filter(n => n.date === today())
+    .sort((a, b) => (b.updated || 0) - (a.updated || 0))[0];
+  fill(todays || null);
+})();
+</script>
+</body>
+</html>
